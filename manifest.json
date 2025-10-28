@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Tab Logger",
   "version": "1.0",
-  "description": "Logs the timestamp of each new tab opened and exports to CSV.",
+  "description": "Logs opened and activated tabs, surfaces analytics, and exports activity to CSV.",
   "permissions": [
     "tabs",
     "storage",

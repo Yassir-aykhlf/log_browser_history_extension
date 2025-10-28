@@ -3,90 +3,491 @@
 <head>
   <title>Tab Logger</title>
   <style>
-    body {
-      font-family: sans-serif;
-      width: 350px;
-      padding: 10px;
-    }
-    ul {
-      list-style-type: none;
+    * {
+      margin: 0;
       padding: 0;
-      max-height: 300px;
-      overflow-y: auto;
+      box-sizing: border-box;
     }
-    li {
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 420px;
+      max-height: 600px;
+      background: #f8f9fa;
+      color: #1f2933;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #ffffff;
+      padding: 16px;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
       margin-bottom: 8px;
-      padding: 8px;
-      background-color: #f5f5f5;
-      border-radius: 3px;
-      font-size: 11px;
-      line-height: 1.4;
     }
-    li a {
-      color: #1a73e8;
-      text-decoration: none;
-      word-break: break-all;
-    }
-    li a:hover {
-      text-decoration: underline;
-    }
-    .event-badge {
-      background-color: #e8f0fe;
-      padding: 2px 6px;
-      border-radius: 12px;
-      font-size: 10px;
-      color: #1565c0;
-    }
-    .controls {
-      margin-bottom: 15px;
+
+    .stats {
       display: flex;
-      gap: 10px;
-      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      opacity: 0.95;
     }
-    button {
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      opacity: 0.75;
+    }
+
+    .controls {
+      background: #ffffff;
+      border-bottom: 1px solid #e9ecef;
+      padding: 16px;
+    }
+
+    .search-box {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 40px 10px 12px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6c757d;
+      font-size: 14px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      flex: 1;
+      min-width: 90px;
+      padding: 6px 8px;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #ffffff;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+    }
+
+    .btn {
+      flex: 1;
       padding: 8px 12px;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s ease;
     }
-    #downloadBtn {
-      background-color: #4CAF50;
-      color: white;
+
+    .btn-primary {
+      background: #667eea;
+      color: #ffffff;
     }
-    #downloadBtn:hover {
-      background-color: #45a049;
+
+    .btn-primary:hover {
+      background: #5a6fd8;
     }
-    #clearBtn {
-      background-color: #f44336;
-      color: white;
+
+    .btn-success {
+      background: #2e9d55;
+      color: #ffffff;
     }
-    #clearBtn:hover {
-      background-color: #da190b;
+
+    .btn-success:hover {
+      background: #268447;
     }
-    #tabCount {
+
+    .btn-danger {
+      background: #e55353;
+      color: #ffffff;
+    }
+
+    .btn-danger:hover {
+      background: #ce4444;
+    }
+
+    .content {
+      background: #ffffff;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
+    .tab-nav {
+      display: flex;
+      border-bottom: 1px solid #e9ecef;
+      background: #ffffff;
+    }
+
+    .tab-nav-item {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+      color: #6c757d;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .tab-nav-item.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+      font-weight: 600;
+    }
+
+    .tab-list {
+      list-style: none;
+    }
+
+    .tab-item {
+      padding: 14px 16px;
+      border-bottom: 1px solid #f1f3f5;
+    }
+
+    .tab-item:last-child {
+      border-bottom: none;
+    }
+
+    .tab-item:hover {
+      background: #f8f9fa;
+    }
+
+    .tab-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .event-badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .event-opened { background: #e3f2fd; color: #1976d2; }
+    .event-activated { background: #e8f5e9; color: #2e7d32; }
+
+    .tab-time {
+      margin-left: auto;
+      font-size: 11px;
+      color: #6c757d;
+    }
+
+    .tab-url {
+      display: block;
+      color: #4c6ef5;
+      text-decoration: none;
+      font-size: 13px;
+      word-break: break-all;
+      margin-bottom: 4px;
+    }
+
+    .tab-url:hover {
+      text-decoration: underline;
+    }
+
+    .tab-title {
       font-size: 12px;
-      color: #666;
-      margin-bottom: 10px;
+      color: #495057;
+      opacity: 0.85;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    h1 {
-      margin: 0 0 15px 0;
+
+    .tab-meta {
+      margin-top: 6px;
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: #6c757d;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: #6c757d;
+    }
+
+    .empty-state-icon {
+      font-size: 46px;
+      margin-bottom: 12px;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #6c757d;
+      background: #f8f9fa;
+      border-top: 1px solid #e9ecef;
+    }
+
+    .page-nav {
+      display: flex;
+      gap: 6px;
+    }
+
+    .page-btn {
+      padding: 4px 10px;
+      border: 1px solid #dee2e6;
+      background: #ffffff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .page-btn.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .analytics-content {
+      padding: 16px;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-number {
       font-size: 18px;
+      font-weight: 600;
+      color: #667eea;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #6c757d;
+      text-transform: uppercase;
+    }
+
+    .top-domains {
+      margin-top: 16px;
+    }
+
+    .domain-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f3f5;
+      font-size: 12px;
+    }
+
+    .domain-item:last-child {
+      border-bottom: none;
+    }
+
+    .domain-count {
+      background: #e9ecef;
+      padding: 2px 8px;
+      border-radius: 12px;
+      color: #495057;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      gap: 10px;
+      color: #6c757d;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #e9ecef;
+      border-left-color: #667eea;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+    }
+
+    .content::-webkit-scrollbar-track {
+      background: #f1f1f1;
     }
   </style>
 </head>
 <body>
-  <h1>Tab Logger</h1>
-  
-  <div class="controls">
-    <button id="downloadBtn">Download CSV</button>
-    <button id="clearBtn">Clear Logs</button>
+  <div class="header">
+    <h1>Tab Logger</h1>
+    <div class="stats">
+      <div class="stat-item">
+        <span id="totalTabs">0 tabs</span>
+        <span class="stat-label">Total</span>
+      </div>
+      <div class="stat-item">
+        <span id="todayTabs">0 today</span>
+        <span class="stat-label">Today</span>
+      </div>
+      <div class="stat-item">
+        <span id="activeDomains">0 domains</span>
+        <span class="stat-label">Domains</span>
+      </div>
+    </div>
   </div>
-  
-  <div id="tabCount"></div>
-  
-  <ul id="tabList"></ul>
-  
+
+  <div class="controls">
+    <div class="search-box">
+      <input type="search" id="searchInput" placeholder="Search URL, title, or domain">
+  <span class="search-icon">&#128269;</span>
+    </div>
+
+    <div class="filter-row">
+      <select id="eventFilter" class="filter-select">
+        <option value="">All events</option>
+        <option value="opened">Opened</option>
+        <option value="activated">Activated</option>
+      </select>
+      <select id="timeFilter" class="filter-select">
+        <option value="">Any time</option>
+        <option value="today">Today</option>
+        <option value="week">Last 7 days</option>
+        <option value="month">This month</option>
+      </select>
+      <select id="sortFilter" class="filter-select">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="domain">Domain A-Z</option>
+      </select>
+    </div>
+
+    <div class="button-row">
+      <button id="exportBtn" class="btn btn-success">Download CSV</button>
+      <button id="clearBtn" class="btn btn-danger">Clear</button>
+  <button id="refreshBtn" class="btn btn-primary" title="Refresh logs">Refresh</button>
+    </div>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-nav-item active" data-tab="logs">Logs</button>
+    <button class="tab-nav-item" data-tab="analytics">Analytics</button>
+  </div>
+
+  <div class="content">
+    <div id="logsTab">
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+  <span>Loading tab history...</span>
+      </div>
+
+      <div id="emptyState" class="empty-state" style="display: none;">
+  <div class="empty-state-icon">&#128196;</div>
+        <div>No tabs logged yet</div>
+      </div>
+
+      <ul id="tabList" class="tab-list" style="display: none;"></ul>
+
+      <div class="pagination">
+        <span>
+          Showing <span id="showingCount">0</span> of <span id="totalCount">0</span>
+        </span>
+        <div class="page-nav">
+          <button id="prevBtn" class="page-btn disabled">Prev</button>
+          <span id="pageInfo">Page 1 of 1</span>
+          <button id="nextBtn" class="page-btn disabled">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="analyticsTab" style="display: none;">
+      <div class="analytics-content">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-number" id="totalTabsAnalytics">0</div>
+            <div class="stat-label">Total Logs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="uniqueDomainsAnalytics">0</div>
+            <div class="stat-label">Unique Domains</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="todayTabsAnalytics">0</div>
+            <div class="stat-label">Today</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="avgPerDayAnalytics">0</div>
+            <div class="stat-label">Avg/Day</div>
+          </div>
+        </div>
+
+        <div class="top-domains">
+          <h3 style="font-size: 14px; margin-bottom: 12px; color: #495057;">Top Domains</h3>
+          <div id="topDomainsList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>

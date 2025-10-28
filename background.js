@@ -1,72 +1,116 @@
-// Track tabs that we've already logged to avoid duplicates
-let loggedTabs = new Set();
+// Track the last open event we logged per tab to reduce duplicate entries
+const lastOpenEventByTab = new Map();
 
-// Function to log tab information
-function logTabInfo(tab, event = 'opened') {
-  // Skip if URL is not available, is a chrome:// URL, or empty
-  if (!tab.url || 
-      tab.url.startsWith('chrome://') || 
-      tab.url.startsWith('chrome-extension://') ||
-      tab.url === 'about:blank' ||
-      tab.url === '') {
-    return;
+// Ensure storage writes happen sequentially to avoid lost updates
+let storageWriteQueue = Promise.resolve();
+const MAX_LOG_ENTRIES = 5000;
+
+function shouldLogTab(tab) {
+  if (!tab || !tab.url) {
+    return false;
   }
 
-  const timestamp = new Date().toLocaleString();
-  const tabInfo = {
-    url: tab.url,
-    title: tab.title || 'Loading...',
-    timestamp: timestamp,
-    event: event
-  };
+  const disallowedPrefixes = [
+    'chrome://',
+    'chrome-extension://',
+    'edge://',
+    'about:blank',
+    'moz-extension://',
+    'safari-extension://'
+  ];
 
-  // Create a unique key for this tab to avoid duplicates
-  const tabKey = `${tab.id}-${tab.url}`;
-  
-  // Skip if we already logged this exact tab/URL combination
-  if (loggedTabs.has(tabKey)) {
-    return;
-  }
-  
-  loggedTabs.add(tabKey);
-
-  chrome.storage.local.get({loggedTabs: []}, function(result) {
-    const existingLogs = result.loggedTabs;
-    existingLogs.push(tabInfo);
-    chrome.storage.local.set({loggedTabs: existingLogs});
-  });
+  return !disallowedPrefixes.some(prefix => tab.url.startsWith(prefix));
 }
 
-// Listen for new tabs being created
-chrome.tabs.onCreated.addListener(function(tab) {
-  // New tabs often don't have URLs yet, so we'll catch them on update
-  logTabInfo(tab, 'created');
-});
+function extractDomain(url) {
+  try {
+    return new URL(url).hostname;
+  } catch (_) {
+    return 'unknown';
+  }
+}
 
-// Listen for tab updates (when URL actually loads)
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-  // Only log when the tab has finished loading and has a URL
-  if (changeInfo.status === 'complete' && tab.url) {
-    logTabInfo(tab, 'loaded');
+function buildLogEntry(tab, event) {
+  const now = Date.now();
+  return {
+    id: `${tab.id}-${now}-${event}`,
+    tabId: tab.id,
+    url: tab.url,
+    title: tab.title || 'Loading...',
+    domain: extractDomain(tab.url),
+    event,
+    timestamp: now,
+    formattedTime: new Date(now).toLocaleString()
+  };
+}
+
+async function appendLogEntry(entry) {
+  const result = await chrome.storage.local.get({ loggedTabs: [] });
+  const logs = Array.isArray(result.loggedTabs) ? result.loggedTabs : [];
+  logs.push(entry);
+
+  if (logs.length > MAX_LOG_ENTRIES) {
+    logs.splice(0, logs.length - MAX_LOG_ENTRIES);
+  }
+
+  await chrome.storage.local.set({ loggedTabs: logs });
+}
+
+function queueLogEntry(entry) {
+  storageWriteQueue = storageWriteQueue
+    .then(() => appendLogEntry(entry))
+    .catch(error => console.error('Failed to persist tab log:', error));
+}
+
+function logOpenedIfNew(tab) {
+  if (!shouldLogTab(tab)) {
+    return;
+  }
+
+  const now = Date.now();
+  const lastOpen = lastOpenEventByTab.get(tab.id);
+  if (lastOpen && lastOpen.url === tab.url && now - lastOpen.timestamp < 1000) {
+    return;
+  }
+
+  lastOpenEventByTab.set(tab.id, { url: tab.url, timestamp: now });
+  queueLogEntry(buildLogEntry(tab, 'opened'));
+}
+
+function logActivation(tab) {
+  if (!shouldLogTab(tab)) {
+    return;
+  }
+
+  if (tab.url) {
+    lastOpenEventByTab.set(tab.id, { url: tab.url, timestamp: Date.now() });
+  }
+
+  queueLogEntry(buildLogEntry(tab, 'activated'));
+}
+
+chrome.tabs.onCreated.addListener(tab => {
+  // Some tabs have a URL immediately (pinned or duplicated tabs)
+  if (tab.url) {
+    logOpenedIfNew(tab);
   }
 });
 
-// Listen for tabs being activated (switched to)
-chrome.tabs.onActivated.addListener(function(activeInfo) {
-  chrome.tabs.get(activeInfo.tabId, function(tab) {
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete') {
+    logOpenedIfNew(tab);
+  }
+});
+
+chrome.tabs.onActivated.addListener(activeInfo => {
+  chrome.tabs.get(activeInfo.tabId, tab => {
     if (chrome.runtime.lastError) {
-      return; // Tab might have been closed
+      return;
     }
-    logTabInfo(tab, 'activated');
+    logActivation(tab);
   });
 });
 
-// Clean up closed tabs from our tracking set
-chrome.tabs.onRemoved.addListener(function(tabId, removeInfo) {
-  // Remove all entries for this tab ID from our tracking set
-  for (let key of loggedTabs) {
-    if (key.startsWith(`${tabId}-`)) {
-      loggedTabs.delete(key);
-    }
-  }
+chrome.tabs.onRemoved.addListener(tabId => {
+  lastOpenEventByTab.delete(tabId);
 });
