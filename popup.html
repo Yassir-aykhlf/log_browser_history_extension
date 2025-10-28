@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tab Logger</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      width: 350px;
+      padding: 10px;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    li {
+      margin-bottom: 8px;
+      padding: 8px;
+      background-color: #f5f5f5;
+      border-radius: 3px;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    li a {
+      color: #1a73e8;
+      text-decoration: none;
+      word-break: break-all;
+    }
+    li a:hover {
+      text-decoration: underline;
+    }
+    .event-badge {
+      background-color: #e8f0fe;
+      padding: 2px 6px;
+      border-radius: 12px;
+      font-size: 10px;
+      color: #1565c0;
+    }
+    .controls {
+      margin-bottom: 15px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    #downloadBtn {
+      background-color: #4CAF50;
+      color: white;
+    }
+    #downloadBtn:hover {
+      background-color: #45a049;
+    }
+    #clearBtn {
+      background-color: #f44336;
+      color: white;
+    }
+    #clearBtn:hover {
+      background-color: #da190b;
+    }
+    #tabCount {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    h1 {
+      margin: 0 0 15px 0;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tab Logger</h1>
+  
+  <div class="controls">
+    <button id="downloadBtn">Download CSV</button>
+    <button id="clearBtn">Clear Logs</button>
+  </div>
+  
+  <div id="tabCount"></div>
+  
+  <ul id="tabList"></ul>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

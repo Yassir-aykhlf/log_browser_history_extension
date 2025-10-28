@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Enhanced Tab Logger</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 420px;
+      max-height: 600px;
+      background: #f8f9fa;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .controls {
+      padding: 16px;
+      background: white;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .search-box {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 40px 10px 12px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6c757d;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      flex: 1;
+      min-width: 80px;
+      padding: 6px 8px;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      font-size: 12px;
+      background: white;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.3s;
+      flex: 1;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5a6fd8;
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: #51cf66;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #40c057;
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: #ff6b6b;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #ff5252;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+      flex: 0 0 auto;
+      padding: 8px;
+      min-width: 36px;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    .content {
+      max-height: 350px;
+      overflow-y: auto;
+      background: white;
+    }
+
+    .tab-list {
+      list-style: none;
+    }
+
+    .tab-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f3f5;
+      transition: background 0.2s;
+    }
+
+    .tab-item:hover {
+      background: #f8f9fa;
+    }
+
+    .tab-item:last-child {
+      border-bottom: none;
+    }
+
+    .tab-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .event-badge {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .event-opened { background: #e3f2fd; color: #1976d2; }
+    .event-loaded { background: #f3e5f5; color: #7b1fa2; }
+    .event-focused { background: #e8f5e8; color: #388e3c; }
+    .event-closed { background: #ffebee; color: #d32f2f; }
+    .event-navigated { background: #fff3e0; color: #f57c00; }
+
+    .tab-time {
+      font-size: 11px;
+      color: #6c757d;
+      margin-left: auto;
+    }
+
+    .tab-url {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 13px;
+      display: block;
+      margin-bottom: 2px;
+      word-break: break-all;
+      line-height: 1.3;
+    }
+
+    .tab-url:hover {
+      text-decoration: underline;
+    }
+
+    .tab-title {
+      font-size: 12px;
+      color: #495057;
+      opacity: 0.8;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .tab-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: #6c757d;
+      margin-top: 4px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #6c757d;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .pagination {
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8f9fa;
+      border-top: 1px solid #e9ecef;
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    .page-nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    .page-btn {
+      padding: 4px 8px;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .page-btn:hover:not(.disabled) {
+      background: #e9ecef;
+    }
+
+    .page-btn.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #6c757d;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #e9ecef;
+      border-left-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Scrollbar styling */
+    .content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .content::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+    }
+
+    .content::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+
+    /* Analytics Tab */
+    .tab-nav {
+      display: flex;
+      background: white;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .tab-nav-item {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      color: #6c757d;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab-nav-item.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+
+    .analytics-content {
+      padding: 16px;
+      background: white;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 18px;
+      font-weight: 600;
+      color: #667eea;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #6c757d;
+      text-transform: uppercase;
+    }
+
+    .top-domains {
+      margin-top: 16px;
+    }
+
+    .domain-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f3f5;
+    }
+
+    .domain-item:last-child {
+      border-bottom: none;
+    }
+
+    .domain-name {
+      font-size: 13px;
+      color: #495057;
+    }
+
+    .domain-count {
+      font-size: 12px;
+      color: #6c757d;
+      background: #e9ecef;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Enhanced Tab Logger</h1>
+    <div class="stats">
+      <span id="totalTabs">0 tabs logged</span>
+      <span id="todayTabs">0 today</span>
+      <span id="activeDomains">0 domains</span>
+    </div>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-nav-item active" data-tab="logs">Logs</button>
+    <button class="tab-nav-item" data-tab="analytics">Analytics</button>
+  </div>
+
+  <!-- Logs Tab -->
+  <div id="logsTab" class="tab-content">
+    <div class="controls">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search by URL, title, or domain...">
+        <span class="search-icon">🔍</span>
+      </div>
+      
+      <div class="filter-row">
+        <select id="eventFilter" class="filter-select">
+          <option value="">All Events</option>
+          <option value="opened">Opened</option>
+          <option value="loaded">Loaded</option>
+          <option value="focused">Focused</option>
+          <option value="closed">Closed</option>
+          <option value="navigated">Navigated</option>
+        </select>
+        
+        <select id="timeFilter" class="filter-select">
+          <option value="">All Time</option>
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+        </select>
+        
+        <select id="sortFilter" class="filter-select">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="domain">By Domain</option>
+        </select>
+      </div>
+      
+      <div class="button-row">
+        <button class="btn btn-success" id="exportBtn">Export</button>
+        <button class="btn btn-primary" id="analyticsBtn">Analytics</button>
+        <button class="btn btn-danger" id="clearBtn">Clear All</button>
+        <button class="btn btn-secondary" id="refreshBtn">⟳</button>
+      </div>
+    </div>
+
+    <div class="content" id="tabContent">
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        Loading tabs...
+      </div>
+      
+      <ul class="tab-list" id="tabList"></ul>
+      
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-state-icon">📋</div>
+        <div>No tabs logged yet</div>
+        <div style="font-size: 11px; margin-top: 8px; opacity: 0.7;">
+          Start browsing to see your tab history here
+        </div>
+      </div>
+    </div>
+
+    <div class="pagination" id="pagination">
+      <div>
+        Showing <span id="showingCount">0</span> of <span id="totalCount">0</span> entries
+      </div>
+      <div class="page-nav">
+        <button class="page-btn" id="prevBtn">Previous</button>
+        <span id="pageInfo">Page 1</span>
+        <button class="page-btn" id="nextBtn">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Tab -->
+  <div id="analyticsTab" class="tab-content" style="display: none;">
+    <div class="analytics-content">
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="totalTabsAnalytics">0</div>
+          <div class="stat-label">Total Tabs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="uniqueDomainsAnalytics">0</div>
+          <div class="stat-label">Unique Domains</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="todayTabsAnalytics">0</div>
+          <div class="stat-label">Today's Tabs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="avgPerDayAnalytics">0</div>
+          <div class="stat-label">Avg/Day</div>
+        </div>
+      </div>
+
+      <div class="top-domains">
+        <h3 style="font-size: 14px; margin-bottom: 12px; color: #495057;">Top Domains</h3>
+        <div id="topDomainsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

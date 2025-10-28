@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Enhanced Tab Logger",
+  "version": "2.0",
+  "description": "Advanced tab logging with analytics, search, and enhanced export capabilities.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "downloads",
+    "activeTab"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  }
+}

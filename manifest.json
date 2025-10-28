@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Logger",
+  "version": "1.0",
+  "description": "Logs the timestamp of each new tab opened and exports to CSV.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "downloads"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
