@@ -1,0 +1,1 @@
+# log_browser_history_extension
