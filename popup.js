@@ -386,17 +386,11 @@ class TabLoggerUI {
 
   async handleRefresh() {
     const refreshBtn = document.getElementById('refreshBtn');
-    if (refreshBtn) {
-      refreshBtn.classList.add('spinning');
-    }
 
     await this.loadTabs();
     this.applyFilters();
     this.updateStats();
 
-    if (refreshBtn) {
-      setTimeout(() => refreshBtn.classList.remove('spinning'), 400);
-    }
   }
 
   showNotification(message, type = 'info') {
@@ -468,11 +462,6 @@ style.textContent = `
       transform: translateX(0);
       opacity: 1;
     }
-  }
-
-  #refreshBtn.spinning {
-    transform: rotate(360deg);
-    transition: transform 0.4s ease;
   }
 `;
 document.head.appendChild(style);
